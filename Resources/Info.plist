@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>FaceCam Overlay</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon.icns</string>
+    <key>CFBundleExecutable</key>
+    <string>FaceCamOverlay</string>
+    <key>CFBundleIdentifier</key>
+	<string>com.augustofranke.FaceCamOverlay</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>FaceCam Overlay</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+    <key>NSCameraUsageDescription</key>
+    <string>FaceCam Overlay uses your camera to display a movable circular preview while you record your screen.</string>
+</dict>
+</plist>
