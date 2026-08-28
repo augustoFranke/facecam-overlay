@@ -1,0 +1,61 @@
+{
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "layer-0.svg",
+          "name": "layer-0",
+          "glass": true,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "image-name": "layer-1.svg",
+          "name": "layer-1",
+          "glass": true,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "name": "Foreground",
+      "specular": true,
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.5
+      },
+      "blur-material": null
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared",
+    "circles": [
+      "watchOS"
+    ]
+  },
+  "fill": {
+    "linear-gradient": [
+      "srgb:0.35686,0.17255,1.00000,1.00000",
+      "srgb:1.00000,0.23922,0.50588,1.00000"
+    ],
+    "orientation": {
+      "start": {
+        "x": 0.1464466094067262,
+        "y": 0.14644660940672627
+      },
+      "stop": {
+        "x": 0.8535533905932737,
+        "y": 0.8535533905932737
+      }
+    }
+  }
+}

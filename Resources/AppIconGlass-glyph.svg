@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <path fill-rule="evenodd" fill="#FFFFFF" d="
+    M 238,244 L 718,244 A 74,74 0 0 1 792,318 L 792,570 A 74,74 0 0 1 718,644 L 238,644
+    A 74,74 0 0 1 164,570 L 164,318 A 74,74 0 0 1 238,244 Z
+    M 736,494 a 162,162 0 1,0 0,324 a 162,162 0 1,0 0,-324 Z"/>
+  <circle cx="736" cy="656" r="144" fill="#FFFFFF"/>
+</svg>

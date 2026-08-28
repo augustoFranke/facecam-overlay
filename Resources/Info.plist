@@ -17,16 +17,14 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
+	<string>1.0.1</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>2</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
-	<key>LSUIElement</key>
-	<true/>
 	<key>NSHighResolutionCapable</key>
 	<true/>
     <key>NSCameraUsageDescription</key>
-    <string>FaceCam Overlay uses your camera to display a movable circular preview while you record your screen.</string>
+    <string>FaceCam Overlay uses your camera to display a movable preview while you record your screen.</string>
 </dict>
 </plist>

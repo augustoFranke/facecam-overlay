@@ -1,8 +1,52 @@
 import AppKit
 @preconcurrency import AVFoundation
 
+private enum OverlayShape: CaseIterable {
+    case circle
+    case roundedSquare
+    case roundedRectangle
+
+    var title: String {
+        switch self {
+        case .circle: "Circle"
+        case .roundedSquare: "Rounded Square"
+        case .roundedRectangle: "Rounded Rectangle (16:10)"
+        }
+    }
+
+    /// Width divided by height.
+    private var aspectRatio: CGFloat {
+        switch self {
+        case .circle, .roundedSquare: 1
+        case .roundedRectangle: 16.0 / 10.0
+        }
+    }
+
+    /// Fraction of the shorter side used as the corner radius.
+    private var cornerFraction: CGFloat {
+        switch self {
+        case .circle: 0.5
+        case .roundedSquare: 0.22
+        case .roundedRectangle: 0.14
+        }
+    }
+
+    /// Overlay size for a requested width, preserving the shape's aspect ratio.
+    func size(forWidth width: CGFloat) -> NSSize {
+        NSSize(width: width, height: (width / aspectRatio).rounded())
+    }
+
+    func cornerRadius(for size: NSSize) -> CGFloat {
+        min(size.width, size.height) * cornerFraction
+    }
+}
+
 private final class CameraPreviewView: NSView {
     let previewLayer = AVCaptureVideoPreviewLayer()
+
+    var shape: OverlayShape = .circle {
+        didSet { needsLayout = true }
+    }
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -18,7 +62,7 @@ private final class CameraPreviewView: NSView {
 
     override func layout() {
         super.layout()
-        layer?.cornerRadius = bounds.width / 2
+        layer?.cornerRadius = shape.cornerRadius(for: bounds.size)
         previewLayer.frame = bounds
     }
 }
@@ -27,9 +71,9 @@ private final class FaceCamPanel: NSPanel {
     private var dragOrigin: NSPoint?
     private var windowOrigin: NSPoint?
 
-    init(size: CGFloat) {
+    init(size: NSSize) {
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: size, height: size),
+            contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -74,9 +118,10 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var currentDeviceID: String?
     private var isMirrored = true
+    private var shape: OverlayShape = .circle
+    private var overlayWidth: CGFloat = 240
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
         buildMenuBar()
         requestCameraAccess()
     }
@@ -86,7 +131,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func requestCameraAccess() {
-        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        switch status {
         case .authorized:
             startCamera()
         case .notDetermined:
@@ -134,24 +183,26 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         previewView.previewLayer.session = session
         applyMirroring()
 
-        if panel == nil { showOverlay(size: 240) }
+        if panel == nil { showOverlay() }
         DispatchQueue.global(qos: .userInitiated).async { [session] in session.startRunning() }
         buildMenuBar()
     }
 
-    private func showOverlay(size: CGFloat) {
+    private func showOverlay() {
+        let size = shape.size(forWidth: overlayWidth)
         let oldCenter = panel?.frame.center
         panel?.orderOut(nil)
 
         panel = FaceCamPanel(size: size)
-        previewView.frame = NSRect(x: 0, y: 0, width: size, height: size)
+        previewView.shape = shape
+        previewView.frame = NSRect(origin: .zero, size: size)
         panel.contentView = previewView
 
         if let oldCenter {
-            panel.setFrameOrigin(NSPoint(x: oldCenter.x - size / 2, y: oldCenter.y - size / 2))
+            panel.setFrameOrigin(NSPoint(x: oldCenter.x - size.width / 2, y: oldCenter.y - size.height / 2))
         } else if let screen = NSScreen.main {
             let visible = screen.visibleFrame
-            panel.setFrameOrigin(NSPoint(x: visible.maxX - size - 28, y: visible.minY + 28))
+            panel.setFrameOrigin(NSPoint(x: visible.maxX - size.width - 28, y: visible.minY + 28))
         }
         panel.orderFrontRegardless()
     }
@@ -159,13 +210,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private func buildMenuBar() {
         if statusItem == nil {
             statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-            statusItem.button?.image = NSImage(systemSymbolName: "video.circle.fill", accessibilityDescription: "FaceCam Overlay")
+            statusItem.button?.image = NSImage(systemSymbolName: "rectangle.inset.filled.and.person.filled", accessibilityDescription: "FaceCam Overlay")
         }
 
         let menu = NSMenu()
         menu.addItem(withTitle: "Small", action: #selector(setSmall), keyEquivalent: "1")
         menu.addItem(withTitle: "Medium", action: #selector(setMedium), keyEquivalent: "2")
         menu.addItem(withTitle: "Large", action: #selector(setLarge), keyEquivalent: "3")
+        menu.addItem(.separator())
+
+        let shapes = NSMenuItem(title: "Shape", action: nil, keyEquivalent: "")
+        shapes.submenu = shapeMenu()
+        menu.addItem(shapes)
         menu.addItem(.separator())
 
         let mirror = NSMenuItem(title: "Mirror Camera", action: #selector(toggleMirror), keyEquivalent: "m")
@@ -182,6 +238,18 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 
         for item in menu.items where item.action != nil { item.target = self }
         statusItem.menu = menu
+    }
+
+    private func shapeMenu() -> NSMenu {
+        let submenu = NSMenu()
+        for option in OverlayShape.allCases {
+            let item = NSMenuItem(title: option.title, action: #selector(selectShape(_:)), keyEquivalent: "")
+            item.representedObject = option
+            item.state = option == shape ? .on : .off
+            item.target = self
+            submenu.addItem(item)
+        }
+        return submenu
     }
 
     private func cameraMenu() -> NSMenu {
@@ -230,9 +298,20 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         alert.runModal()
     }
 
-    @objc private func setSmall() { showOverlay(size: 160) }
-    @objc private func setMedium() { showOverlay(size: 240) }
-    @objc private func setLarge() { showOverlay(size: 340) }
+    private func setWidth(_ width: CGFloat) {
+        overlayWidth = width
+        showOverlay()
+    }
+
+    @objc private func setSmall() { setWidth(160) }
+    @objc private func setMedium() { setWidth(240) }
+    @objc private func setLarge() { setWidth(340) }
+    @objc private func selectShape(_ sender: NSMenuItem) {
+        guard let option = sender.representedObject as? OverlayShape, option != shape else { return }
+        shape = option
+        showOverlay()
+        buildMenuBar()
+    }
     @objc private func toggleMirror() { isMirrored.toggle(); applyMirroring(); buildMenuBar() }
     @objc private func retryCameraAccess() { requestCameraAccess() }
     @objc private func selectCamera(_ sender: NSMenuItem) {

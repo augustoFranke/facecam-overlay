@@ -1,7 +1,7 @@
 # FaceCam Overlay
 
 FaceCam Overlay is a tiny native macOS app that keeps your camera in a movable
-circle above every other window—handy for screen recordings, walkthroughs, and
+overlay above every other window—handy for screen recordings, walkthroughs, and
 presentations.
 
 ## Install
@@ -11,7 +11,7 @@ presentations.
 2. Open the DMG and drag **FaceCam Overlay** into **Applications**.
 3. Launch the app and allow Camera access when macOS asks.
 
-The app lives in the menu bar. Drag the camera circle anywhere on screen, then
+The app lives in the menu bar. Drag the camera overlay anywhere on screen, then
 record normally with `Command-Shift-5`, QuickTime, OBS, or another recorder.
 
 > The first release is signed but not notarized. If macOS blocks the first
@@ -19,7 +19,8 @@ record normally with `Command-Shift-5`, QuickTime, OBS, or another recorder.
 
 ## Features
 
-- Always-on-top circular camera preview
+- Always-on-top camera preview
+- Circle, rounded square, and rounded rectangle (16:10) shapes
 - Small, medium, and large sizes
 - Mirrored preview toggle
 - Camera selection, including Continuity Camera
