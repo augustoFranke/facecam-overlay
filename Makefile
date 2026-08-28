@@ -2,13 +2,14 @@
 
 APP_NAME := FaceCam Overlay
 EXECUTABLE := FaceCamOverlay
-VERSION := 1.0.0
+VERSION := 1.0.1
 BUILD_DIR := build
 APP_DIR := $(BUILD_DIR)/$(APP_NAME).app
+APP_STAMP := $(BUILD_DIR)/.app.stamp
 ICONSET := $(BUILD_DIR)/AppIcon.iconset
 DMG_ROOT := $(BUILD_DIR)/dmg-root
 DMG_PATH := $(BUILD_DIR)/FaceCam-Overlay-$(VERSION).dmg
-SIGN_IDENTITY ?= -
+SIGN_IDENTITY := -
 
 all: dmg
 
@@ -29,14 +30,23 @@ Resources/AppIcon.icns: Resources/AppIcon.png
 	cp "$<" "$(ICONSET)/icon_512x512@2x.png"
 	iconutil -c icns "$(ICONSET)" -o "$@"
 
-app: icon
-	swift build -c release
+app: $(APP_STAMP)
+
+$(APP_STAMP): .build/release/$(EXECUTABLE) Resources/Info.plist Resources/AppIcon.icns Resources/Entitlements.plist | $(BUILD_DIR)
 	rm -rf "$(APP_DIR)"
 	mkdir -p "$(APP_DIR)/Contents/MacOS" "$(APP_DIR)/Contents/Resources"
 	cp ".build/release/$(EXECUTABLE)" "$(APP_DIR)/Contents/MacOS/$(EXECUTABLE)"
 	cp Resources/Info.plist "$(APP_DIR)/Contents/Info.plist"
 	cp Resources/AppIcon.icns "$(APP_DIR)/Contents/Resources/AppIcon.icns"
-	xattr -cr "$(APP_DIR)" && codesign --force --deep --options runtime --sign "$(SIGN_IDENTITY)" "$(APP_DIR)"
+	printf "APPL????" > "$(APP_DIR)/Contents/PkgInfo"
+	xattr -cr "$(APP_DIR)" && codesign --force --deep --options runtime --entitlements Resources/Entitlements.plist --sign "$(SIGN_IDENTITY)" "$(APP_DIR)"
+	touch "$(APP_STAMP)"
+
+$(BUILD_DIR):
+	mkdir -p "$(BUILD_DIR)"
+
+.build/release/$(EXECUTABLE): Package.swift Sources/FaceCamOverlay/main.swift
+	swift build -c release
 
 dmg: app
 	rm -rf "$(DMG_ROOT)" "$(DMG_PATH)"
@@ -46,7 +56,7 @@ dmg: app
 	hdiutil create -volname "$(APP_NAME)" -srcfolder "$(DMG_ROOT)" -ov -format UDZO "$(DMG_PATH)"
 	codesign --force --sign "$(SIGN_IDENTITY)" "$(DMG_PATH)"
 
-run: app
+run: $(APP_STAMP)
 	open "$(APP_DIR)"
 
 verify: dmg
